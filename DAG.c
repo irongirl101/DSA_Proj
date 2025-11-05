@@ -1,7 +1,11 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 
-#define MAX_vertices 100
+// TOPIC: SMART TO DO LIST WITH DEPENDENCIES AND DEADLINES -> should be able to tell which task to do next (thats were level order traversal or bfs comes into picture, it is also useful for telling when a task is over)
+// rather than using direct BFS, we need to have a pointer at each level, and once everything in that level is cleared, we can go to the next level 
+// and cause its directed, its already in a given order 
+
+/*#define MAX_vertices 100
 #define MAX_length 100
 
 struct Node{
@@ -44,9 +48,9 @@ void addEdge(struct Graph* graph, int src, char *str) {
 
 
 void printGraph(struct Graph* graph) {
-    for (int v = 0; v < graph->numVertices; ++v) {
+    for (int v = 0; v < graph->numVertices; v++) {
         struct Node* temp = graph->array[v].head;
-        printf("\nAdjacency list of vertex %d\n head ", v);
+        printf("\nAdjacency list of vertex %d\n head ", v+1);
         while (temp) {
             printf("-> %s", temp->string);
             temp = temp->next;
@@ -59,12 +63,12 @@ void printGraph(struct Graph* graph) {
 int main() {
     int numVertices = 5;
     struct Graph* graph = createGraph(numVertices);
-    addEdge(graph, 0, "no");
-    addEdge(graph, 0, "yes");
-    addEdge(graph, 1, "try");
-    addEdge(graph, 2, "noo");
-    addEdge(graph, 2, "go");
-    addEdge(graph, 1, "banana");
+    addEdge(graph, 0, "2");
+    addEdge(graph, 0, "3");
+    addEdge(graph, 0, "4");
+    addEdge(graph, 1, "5");
+    addEdge(graph, 3, "5");
+    
 
     printGraph(graph);
 
@@ -82,3 +86,7 @@ int main() {
 
     return 0;
 }
+*/
+
+
+
