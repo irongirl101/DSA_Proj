@@ -14,7 +14,7 @@
 
 
 // for deadlines, i will need to find the smallest deadline, and then bfs till that, then again bfs for the next smallest 
-// oh dji 
+// oh dji from start node to end node 
 
 // queue structure for bfs 
 struct queue{
@@ -150,8 +150,7 @@ void addEdge(struct Graph* graph, const char* srcName, const char* destName, int
 }*/
 
 
-
-int minDistance(int dist[], int visited[], int vertices) {
+/*int minDistance(int dist[], int visited[], int vertices) {
     int min = INT_MAX, minIndex = -1;
     for (int v = 0; v < vertices; v++)
         if (!visited[v] && dist[v] <= min)
@@ -196,6 +195,83 @@ void dijkstra(struct Graph* graph, const char* startName) {
             printf("%d\n", dist[i]);
     }
 }
+*/
+
+
+// why topological sort? it does everything for you, crit path detection, order in which to do it, and suggests path 
+
+void topologicalsort(struct Graph* graph){
+    int v = graph->numVertices; 
+    int in_degree[MAX_VERTICES] = {0}; // taking into account vertices with 0 in degree 
+
+    // traverse the adjacency list of each vertex to count incoming edges
+    for(int i = 0; i< v; i++){
+        struct Node* temp = graph->array[i].head; 
+        while (temp!=NULL)
+        {
+            in_degree[temp->vertex]++; 
+            temp = temp->next; 
+        }
+        
+    }
+
+    // add all the vertices with 0 in degree 
+    struct queue* q = createQueue(); 
+    for(int i = 0; i< v; i++){
+        if (in_degree[i] == 0) {
+            enqueue(q, i);
+        }
+    }
+
+    int visitedCount = 0;
+    int order[MAX_VERTICES]; // sorted array 
+
+    while (!isEmpty(q)) {
+        // dequeue a vertex with in-degree 0
+        int u = dequeue(q);
+        // add it to our sorted list
+        order[visitedCount] = u;
+        visitedCount++;
+
+        // iterate through dependencies 
+        struct Node* temp = graph->array[u].head;
+        while (temp) {
+            int v = temp->vertex;
+            
+            // remove edge 
+            in_degree[v]--;
+
+            // if now has 0, enqueue 
+            if (in_degree[v] == 0) {
+                enqueue(q, v);
+            }
+            temp = temp->next;
+        }
+    }
+
+    // check for cycle 
+    if (visitedCount != v) {
+        printf("\nError: The graph contains a cycle! A valid task order is not possible.\n");
+        printf("The following tasks are part of a dependency loop:\n");
+        for (int i = 0; i < v; i++) {
+            if (in_degree[i] > 0) {
+                printf("- %s\n", graph->vertexNames[i]);
+            }
+        }
+    } else {
+        // print sorted order 
+        printf("\nvalid task order \n");
+        for (int i = 0; i < v; i++) {
+            printf("%s", graph->vertexNames[order[i]]);
+            if (i < v - 1) {
+                printf(" -> ");
+            }
+        }
+        printf("\n");
+    }
+
+    free(q);
+}
 
 
 void printGraph(struct Graph* graph) {
@@ -216,44 +292,58 @@ int* sort(int arr[]){
 
 int main() {
     struct Graph* graph = createGraph(MAX_VERTICES);
-    int arr[MAX_VERTICES]; 
-    int tasks; 
-    struct Node* node; 
-    printf("Enter number of tasks\n");
-    scanf("%d",&tasks); 
+    int arr[MAX_VERTICES];  
+    int tasks;
+    char allTaskNames[MAX_VERTICES][MAX_NAME_LEN];
+    int allTaskDeadlines[MAX_VERTICES];
 
-    for(int i = 0; i<tasks;i++){
-        char task[MAX_NAME_LEN]; 
-        char dependency;  
-        int deadline; 
-        printf("Enter task\n"); 
-        scanf("%s",task); 
-        printf("Enter deadline\n"); 
-        scanf("%d", &deadline); 
-        arr[i] = deadline; 
-        printf("Do you have a dependency on this task?(y/n)\n");
-        scanf(" %c", &dependency); 
-        if(dependency=='y'){
-            int no_tasks; 
-            printf("Number of tasks %s is dependent on?\n", task); 
-            scanf("%d", &no_tasks); 
-            for(int j = 0; j < no_tasks;j++){
-                char task_dependent[MAX_NAME_LEN]; 
-                printf("Enter task %s is dependent on\n", task); 
-                scanf("%s", task_dependent); 
-                addEdge(graph, task_dependent,task, deadline); 
+    printf("Enter number of tasks\n");
+    scanf("%d", &tasks);
+    getchar();
+
+    for (int i = 0; i < tasks; i++) {
+        printf("Enter name for task %d:\n", i + 1);
+        fgets(allTaskNames[i], MAX_NAME_LEN, stdin);
+        allTaskNames[i][strcspn(allTaskNames[i], "\n")] = '\0';
+
+        getIndex(graph, allTaskNames[i]); // adds each task as a vertex 
+       
+        printf("Enter deadline for %s:\n", allTaskNames[i]);
+        scanf("%d", &allTaskDeadlines[i]);
+        getchar();
+    } 
+
+       for (int i = 0; i < tasks; i++) {
+        char dependency;
+        printf("Does task '%s' have dependencies? (y/n)\n", allTaskNames[i]);
+        scanf(" %c", &dependency);
+        getchar();
+
+        if (dependency == 'y') {
+            int no_tasks;
+            printf("Number of tasks '%s' is dependent on?\n", allTaskNames[i]);
+            scanf("%d", &no_tasks);
+            getchar();
+            for (int j = 0; j < no_tasks; j++) {
+                char task_dependent[MAX_NAME_LEN] = {0};
+                printf("Enter task name that '%s' depends on:\n", allTaskNames[i]);
+                fgets(task_dependent, MAX_NAME_LEN, stdin);
+                task_dependent[strcspn(task_dependent, "\n")] = '\0';
+                
+                
+                addEdge(graph, task_dependent, allTaskNames[i], allTaskDeadlines[i]);
             }
-        }
-        else{
-            continue; 
         }
 
     }
     
+    //for(int i = 0; i<sizeof(arr)/sizeof(arr[0]);i++){
+       // printf("%d",arr[i]);
+    //}
 
-    printGraph(graph);
+    //printGraph(graph);
 
-    dijkstra(graph,graph->lastAddedName); 
+    topologicalsort(graph);
 
     return 0;
 }
