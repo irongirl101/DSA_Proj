@@ -199,6 +199,8 @@ void dijkstra(struct Graph* graph, const char* startName) {
 
 
 // why topological sort? it does everything for you, crit path detection, order in which to do it, and suggests path 
+// you will always do the previous task before the next one 
+// topological sort is meant for task scheduling 
 
 void topologicalsort(struct Graph* graph){
     int v = graph->numVertices; 
