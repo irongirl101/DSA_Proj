@@ -76,7 +76,7 @@ struct Graph {
     struct adjlist* array;
     int* visited;
     char vertexNames[MAX_VERTICES][MAX_NAME_LEN];
-    char lastAddedName[MAX_NAME_LEN];
+    //char lastAddedName[MAX_NAME_LEN];
 };
 
 struct Graph* createGraph(int vertices) {
@@ -91,7 +91,6 @@ struct Graph* createGraph(int vertices) {
     }
     return graph;
 }
-
 
 int getIndex(struct Graph* graph, const char* name) {
     for (int i = 0; i < graph->numVertices; i++) {
@@ -120,7 +119,7 @@ void addEdge(struct Graph* graph, const char* srcName, const char* destName, int
     newNode->next = graph->array[src].head;
     
     graph->array[src].head = newNode;
-    strcpy(graph->lastAddedName,destName);  
+    //strcpy(graph->lastAddedName,destName);  
 }
 
 
@@ -253,7 +252,7 @@ void topologicalsort(struct Graph* graph){
 
     // check for cycle 
     if (visitedCount != v) {
-        printf("\nError: The graph contains a cycle! A valid task order is not possible.\n");
+        printf("\nError: The graph contains a cycle.\n");
         printf("The following tasks are part of a dependency loop:\n");
         for (int i = 0; i < v; i++) {
             if (in_degree[i] > 0) {
@@ -286,10 +285,6 @@ void printGraph(struct Graph* graph) {
         }
         printf("\n");
     }
-}
-
-int* sort(int arr[]){
-
 }
 
 int main() {
