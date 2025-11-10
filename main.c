@@ -6,7 +6,6 @@
 #define SIZE 100
 #define MAX_VERTICES 100
 #define MAX_NAME_LEN 50
-
 // turns out i was overcomplicating everything, i just needed to do disconnected graphs 
 // then search for closest deadline, and bfs for till that 
 // by implementing a bfs, i will be taking queues into account as well 
@@ -16,18 +15,18 @@
 // for deadlines, i will need to find the smallest deadline, and then bfs till that, then again bfs for the next smallest 
 // oh dji from start node to end node 
 
-// queue structure for bfs 
-struct queue{
-    int items[SIZE]; // max number of indices
-    int front; 
-    int rear; 
+
+// Queue structure for BFS/topological sorting
+struct queue {
+    int items[SIZE];
+    int front;
+    int rear;
 };
 
-struct queue* createQueue(){
-    struct queue* q = (struct queue*)malloc(sizeof(struct queue)); 
-    // init front and rear to -1 
-    q->front = -1; 
-    q->rear = -1; 
+struct queue* createQueue() {
+    struct queue* q = (struct queue*)malloc(sizeof(struct queue));
+    q->front = -1;
+    q->rear = -1;
     return q;
 }
 
@@ -35,53 +34,48 @@ int isEmpty(struct queue* q) {
     return q->rear == -1;
 }
 
-void enqueue(struct queue* q, int value){
-    if(q->rear++==SIZE){
-        printf("Queue at max size"); 
-        return; 
+void enqueue(struct queue* q, int value) {
+    if (q->rear == SIZE - 1) {
+        printf("Queue full\n");
+        return;
     }
-    if(q->front == -1){
-        q->front=0; 
-    }
-    q->items[q->rear] = value; 
+    if (q->front == -1)
+        q->front = 0;
+    q->items[++q->rear] = value;
 }
 
-int dequeue(struct queue* q){
-    if(q->front==-1){
-        printf("Empty"); 
-        return -1; 
-    }
-    int item = q->items[q->front]; 
-    q->front++; 
-    if(q->front > q->rear){
-        q->front = q->rear = -1; 
-    }
-    return item; 
+int dequeue(struct queue* q) {
+    if (q->front == -1)
+        return -1;
+    int item = q->items[q->front++];
+    if (q->front > q->rear)
+        q->front = q->rear = -1;
+    return item;
 }
 
-// adjacency list 
-struct Node{
-    int vertex; 
-    struct Node* next; 
-    int deadline; 
-}; 
+// Node for adjacency list
+struct Node {
+    int vertex;
+    struct Node* next;
+    int deadline;
+};
 
-struct adjlist{
-    struct Node* head; 
-}; 
+// Adjacency list
+struct adjlist {
+    struct Node* head;
+};
 
-// graph 
+// Graph
 struct Graph {
     int numVertices;
     struct adjlist* array;
     int* visited;
     char vertexNames[MAX_VERTICES][MAX_NAME_LEN];
-    //char lastAddedName[MAX_NAME_LEN];
 };
 
 struct Graph* createGraph(int vertices) {
     struct Graph* graph = malloc(sizeof(struct Graph));
-    graph->numVertices = 0;  
+    graph->numVertices = 0;
     graph->array = malloc(vertices * sizeof(struct adjlist));
     graph->visited = malloc(vertices * sizeof(int));
 
@@ -102,11 +96,10 @@ int getIndex(struct Graph* graph, const char* name) {
     return graph->numVertices - 1;
 }
 
-
 struct Node* createNode(int vertexIndex, int deadline) {
     struct Node* newNode = malloc(sizeof(struct Node));
     newNode->vertex = vertexIndex;
-    newNode->deadline = deadline; 
+    newNode->deadline = deadline;
     newNode->next = NULL;
     return newNode;
 }
@@ -115,41 +108,65 @@ void addEdge(struct Graph* graph, const char* srcName, const char* destName, int
     int src = getIndex(graph, srcName);
     int dest = getIndex(graph, destName);
 
-    struct Node* newNode = createNode(dest,deadline);
+    struct Node* newNode = createNode(dest, deadline);
     newNode->next = graph->array[src].head;
-    
     graph->array[src].head = newNode;
-    //strcpy(graph->lastAddedName,destName);  
 }
 
+// ==================== CRITICAL PATH (Topological Sort) ====================
 
-/*void bfs(struct Graph* graph, const char* startName) {
-    int startVertex = getIndex(graph, startName);
-    struct queue* q = createQueue();
+void topologicalsort(struct Graph* graph) {
+    int v = graph->numVertices;
+    int in_degree[MAX_VERTICES] = {0};
 
-    graph->visited[startVertex] = 1;
-    enqueue(q, startVertex);
-
-    //printf("\nBFS starting from %s:\n", startName);
-
-    while (!isEmpty(q)) {
-        int current = dequeue(q);
-        printf("%s\n", graph->vertexNames[current]);
-
-        struct Node* temp = graph->array[current].head;
+    // Compute in-degrees
+    for (int i = 0; i < v; i++) {
+        struct Node* temp = graph->array[i].head;
         while (temp) {
-            int adj = temp->vertex;
-            if (graph->visited[adj] == 0) {
-                graph->visited[adj] = 1;
-                enqueue(q, adj);
-            }
+            in_degree[temp->vertex]++;
             temp = temp->next;
         }
     }
-}*/
 
+    struct queue* q = createQueue();
+    for (int i = 0; i < v; i++) {
+        if (in_degree[i] == 0)
+            enqueue(q, i);
+    }
 
-/*int minDistance(int dist[], int visited[], int vertices) {
+    int count = 0;
+    int order[MAX_VERTICES];
+
+    while (!isEmpty(q)) {
+        int u = dequeue(q);
+        order[count++] = u;
+
+        struct Node* temp = graph->array[u].head;
+        while (temp) {
+            in_degree[temp->vertex]--;
+            if (in_degree[temp->vertex] == 0)
+                enqueue(q, temp->vertex);
+            temp = temp->next;
+        }
+    }
+
+    if (count != v) {
+        printf("\nError: Graph contains a cycle (dependency loop detected)\n");
+    } else {
+        printf("\nValid Task Execution Order:\n");
+        for (int i = 0; i < v; i++) {
+            printf("%s", graph->vertexNames[order[i]]);
+            if (i < v - 1)
+                printf(" -> ");
+        }
+        printf("\n");
+    }
+    free(q);
+}
+
+// ==================== DIJKSTRA’s ALGORITHM ====================
+
+int minDistance(int dist[], int visited[], int vertices) {
     int min = INT_MAX, minIndex = -1;
     for (int v = 0; v < vertices; v++)
         if (!visited[v] && dist[v] <= min)
@@ -157,14 +174,14 @@ void addEdge(struct Graph* graph, const char* srcName, const char* destName, int
     return minIndex;
 }
 
-void dijkstra(struct Graph* graph, const char* startName) {
+void dijkstra(struct Graph* graph, const char* startName, const char* endName) {
     int V = graph->numVertices;
     int dist[MAX_VERTICES];
     int visited[MAX_VERTICES] = {0};
 
     int start = getIndex(graph, startName);
+    int end = getIndex(graph, endName);
 
-    // init distances as infinity
     for (int i = 0; i < V; i++)
         dist[i] = INT_MAX;
 
@@ -178,102 +195,20 @@ void dijkstra(struct Graph* graph, const char* startName) {
         struct Node* temp = graph->array[u].head;
         while (temp) {
             int v = temp->vertex;
-            int weight = temp->deadline;
+            int weight = temp->deadline; // treat deadline as weight
             if (!visited[v] && dist[u] != INT_MAX && dist[u] + weight < dist[v])
                 dist[v] = dist[u] + weight;
             temp = temp->next;
         }
     }
 
-    printf("\nShortest paths from %s:\n", startName);
-    for (int i = 0; i < V; i++) {
-        printf("%s : ", graph->vertexNames[i]);
-        if (dist[i] == INT_MAX)
-            printf("unreachable\n");
-        else
-            printf("%d\n", dist[i]);
-    }
-}
-*/
-
-
-// why topological sort? it does everything for you, crit path detection, order in which to do it, and suggests path 
-// you will always do the previous task before the next one 
-// topological sort is meant for task scheduling 
-
-void topologicalsort(struct Graph* graph){
-    int v = graph->numVertices; 
-    int in_degree[MAX_VERTICES] = {0}; // taking into account vertices with 0 in degree 
-
-    // traverse the adjacency list of each vertex to count incoming edges
-    for(int i = 0; i< v; i++){
-        struct Node* temp = graph->array[i].head; 
-        while (temp!=NULL)
-        {
-            in_degree[temp->vertex]++; 
-            temp = temp->next; 
-        }
-        
-    }
-
-    // add all the vertices with 0 in degree 
-    struct queue* q = createQueue(); 
-    for(int i = 0; i< v; i++){
-        if (in_degree[i] == 0) {
-            enqueue(q, i);
-        }
-    }
-
-    int visitedCount = 0;
-    int order[MAX_VERTICES]; // sorted array 
-
-    while (!isEmpty(q)) {
-        // dequeue a vertex with in-degree 0
-        int u = dequeue(q);
-        // add it to our sorted list
-        order[visitedCount] = u;
-        visitedCount++;
-
-        // iterate through dependencies 
-        struct Node* temp = graph->array[u].head;
-        while (temp) {
-            int v = temp->vertex;
-            
-            // remove edge 
-            in_degree[v]--;
-
-            // if now has 0, enqueue 
-            if (in_degree[v] == 0) {
-                enqueue(q, v);
-            }
-            temp = temp->next;
-        }
-    }
-
-    // check for cycle 
-    if (visitedCount != v) {
-        printf("\nError: The graph contains a cycle.\n");
-        printf("The following tasks are part of a dependency loop:\n");
-        for (int i = 0; i < v; i++) {
-            if (in_degree[i] > 0) {
-                printf("- %s\n", graph->vertexNames[i]);
-            }
-        }
-    } else {
-        // print sorted order 
-        printf("\nvalid task order \n");
-        for (int i = 0; i < v; i++) {
-            printf("%s", graph->vertexNames[order[i]]);
-            if (i < v - 1) {
-                printf(" -> ");
-            }
-        }
-        printf("\n");
-    }
-
-    free(q);
+    if (dist[end] == INT_MAX)
+        printf("\nNo path exists between %s and %s.\n", startName, endName);
+    else
+        printf("\nShortest path from %s to %s = %d (based on deadlines)\n", startName, endName, dist[end]);
 }
 
+// ==================== GRAPH PRINT ====================
 
 void printGraph(struct Graph* graph) {
     for (int v = 0; v < graph->numVertices; v++) {
@@ -287,60 +222,103 @@ void printGraph(struct Graph* graph) {
     }
 }
 
-int main() {
-    struct Graph* graph = createGraph(MAX_VERTICES);
-    int arr[MAX_VERTICES];  
-    int tasks;
-    char allTaskNames[MAX_VERTICES][MAX_NAME_LEN];
-    int allTaskDeadlines[MAX_VERTICES];
+// ==================== MENU OPTIONS ====================
 
-    printf("Enter number of tasks\n");
+void addTasks(struct Graph* graph, int deadlines[]) {
+    int tasks;
+    printf("Enter number of tasks to add: ");
     scanf("%d", &tasks);
     getchar();
 
     for (int i = 0; i < tasks; i++) {
-        printf("Enter name for task %d:\n", i + 1);
-        fgets(allTaskNames[i], MAX_NAME_LEN, stdin);
-        allTaskNames[i][strcspn(allTaskNames[i], "\n")] = '\0';
+        char name[MAX_NAME_LEN];
+        printf("Enter name for task %d: ", i + 1);
+        fgets(name, MAX_NAME_LEN, stdin);
+        name[strcspn(name, "\n")] = '\0';
+        getIndex(graph, name);
 
-        getIndex(graph, allTaskNames[i]); // adds each task as a vertex 
-       
-        printf("Enter deadline for %s:\n", allTaskNames[i]);
-        scanf("%d", &allTaskDeadlines[i]);
+        printf("Enter deadline for %s: ", name);
+        scanf("%d", &deadlines[getIndex(graph, name)]);
         getchar();
-    } 
-
-       for (int i = 0; i < tasks; i++) {
-        char dependency;
-        printf("Does task '%s' have dependencies? (y/n)\n", allTaskNames[i]);
-        scanf(" %c", &dependency);
-        getchar();
-
-        if (dependency == 'y') {
-            int no_tasks;
-            printf("Number of tasks '%s' is dependent on?\n", allTaskNames[i]);
-            scanf("%d", &no_tasks);
-            getchar();
-            for (int j = 0; j < no_tasks; j++) {
-                char task_dependent[MAX_NAME_LEN] = {0};
-                printf("Enter task name that '%s' depends on:\n", allTaskNames[i]);
-                fgets(task_dependent, MAX_NAME_LEN, stdin);
-                task_dependent[strcspn(task_dependent, "\n")] = '\0';
-                
-                
-                addEdge(graph, task_dependent, allTaskNames[i], allTaskDeadlines[i]);
-            }
-        }
-
     }
-    
-    //for(int i = 0; i<sizeof(arr)/sizeof(arr[0]);i++){
-       // printf("%d",arr[i]);
-    //}
+}
 
-    //printGraph(graph);
+void addDependencies(struct Graph* graph, int deadlines[]) {
+    char task[MAX_NAME_LEN];
+    printf("Enter task name to add dependencies for: ");
+    fgets(task, MAX_NAME_LEN, stdin);
+    task[strcspn(task, "\n")] = '\0';
 
-    topologicalsort(graph);
+    char depTask[MAX_NAME_LEN];
+    int n;
+    printf("How many dependencies does '%s' have? ", task);
+    scanf("%d", &n);
+    getchar();
+
+    for (int i = 0; i < n; i++) {
+        printf("Enter name of dependency %d: ", i + 1);
+        fgets(depTask, MAX_NAME_LEN, stdin);
+        depTask[strcspn(depTask, "\n")] = '\0';
+        addEdge(graph, depTask, task, deadlines[getIndex(graph, task)]);
+    }
+}
+
+// ==================== MAIN ====================
+
+int main() {
+    struct Graph* graph = createGraph(MAX_VERTICES);
+    int deadlines[MAX_VERTICES] = {0};
+
+    int choice;
+    char start[MAX_NAME_LEN], end[MAX_NAME_LEN];
+
+    while (1) {
+        printf("\n========== TASK SCHEDULER ==========\n");
+        printf("1. Add Tasks\n");
+        printf("2. Add Dependencies\n");
+        printf("3. Critical Path Detection (Topological Sort)\n");
+        printf("4. Shortest Path Between Two Tasks (Dijkstra)\n");
+        printf("5. Display Graph\n");
+        printf("6. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        getchar();
+
+        switch (choice) {
+            case 1:
+                addTasks(graph, deadlines);
+                break;
+
+            case 2:
+                addDependencies(graph, deadlines);
+                break;
+
+            case 3:
+                topologicalsort(graph);
+                break;
+
+            case 4:
+                printf("Enter start task name: ");
+                fgets(start, MAX_NAME_LEN, stdin);
+                start[strcspn(start, "\n")] = '\0';
+                printf("Enter end task name: ");
+                fgets(end, MAX_NAME_LEN, stdin);
+                end[strcspn(end, "\n")] = '\0';
+                dijkstra(graph, start, end);
+                break;
+
+            case 5:
+                printGraph(graph);
+                break;
+
+            case 6:
+                printf("Exiting...\n");
+                exit(0);
+
+            default:
+                printf("Invalid choice.\n");
+        }
+    }
 
     return 0;
 }
