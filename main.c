@@ -273,11 +273,11 @@ int main() {
     char start[MAX_NAME_LEN], end[MAX_NAME_LEN];
 
     while (1) {
-        printf("\n========== TASK SCHEDULER ==========\n");
+        printf("========== TASK SCHEDULER ==========");
         printf("1. Add Tasks\n");
         printf("2. Add Dependencies\n");
-        printf("3. Critical Path Detection (Topological Sort)\n");
-        printf("4. Shortest Path Between Two Tasks (Dijkstra)\n");
+        printf("3. Critical Path Detection\n");
+        printf("4. Shortest Path Between Two Tasks\n");
         printf("5. Display Graph\n");
         printf("6. Exit\n");
         printf("Enter your choice: ");
