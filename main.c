@@ -113,7 +113,7 @@ void addEdge(struct Graph* graph, const char* srcName, const char* destName, int
     graph->array[src].head = newNode;
 }
 
-// ==================== CRITICAL PATH (Topological Sort) ====================
+// ==================== Topological Sort ====================
 
 void topologicalsort(struct Graph* graph) {
     int v = graph->numVertices;
@@ -263,6 +263,38 @@ void addDependencies(struct Graph* graph, int deadlines[]) {
     }
 }
 
+int findTaskIndex(struct Graph* graph, const char* name) {
+    for (int i = 0; i < graph->numVertices; i++) {
+        if (strcmp(graph->vertexNames[i], name) == 0)
+            return i;
+    }
+    return -1; 
+}
+void suggestNextTasks(struct Graph* g, char* taskName){
+    int index = findTaskIndex(g, taskName); 
+    if(index==-1){
+        printf("Not Found"); 
+        return; 
+    }
+    struct Node* temp = g->array[index].head;
+
+    if (temp == NULL) {
+        printf("\nTask '%s' has no immediate subsequent tasks (it may be a final task).\n", taskName);
+        return;
+    }
+
+    printf("\nTasks that can be started after '%s':\n", taskName);
+    while (temp) {
+        printf(" - %s\n", g->vertexNames[temp->vertex]);
+        temp = temp->next;
+    }
+    printf("\n");
+
+}
+
+void ChangeDeadline(struct Graph* Graph, char ){
+
+}
 // ==================== MAIN ====================
 
 int main() {
@@ -271,15 +303,16 @@ int main() {
 
     int choice;
     char start[MAX_NAME_LEN], end[MAX_NAME_LEN];
-
+    char taskName[MAX_NAME_LEN]; 
     while (1) {
-        printf("========== TASK SCHEDULER ==========");
+        printf("========== TASK SCHEDULER ==========\n");
         printf("1. Add Tasks\n");
         printf("2. Add Dependencies\n");
         printf("3. Critical Path Detection\n");
         printf("4. Shortest Path Between Two Tasks\n");
         printf("5. Display Graph\n");
-        printf("6. Exit\n");
+        printf("6. Suggest Next Tasks\n"); 
+        printf("7. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
         getchar();
@@ -311,7 +344,15 @@ int main() {
                 printGraph(graph);
                 break;
 
-            case 6:
+            case 6: 
+                
+                printf("Enter task name to find next tasks for: \n");
+                fgets(taskName, MAX_NAME_LEN, stdin);
+                taskName[strcspn(taskName, "\n")] = '\0';
+                suggestNextTasks(graph, taskName);
+                break;
+
+            case 7:
                 printf("Exiting...\n");
                 exit(0);
 
@@ -322,3 +363,7 @@ int main() {
 
     return 0;
 }
+
+// reschedule tasks : change deadline 
+
+// export plan : adjacency list 
