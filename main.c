@@ -403,15 +403,25 @@ int main() {
     int choice;
     char start[MAX_NAME_LEN], end[MAX_NAME_LEN];
     char taskName[MAX_NAME_LEN]; 
+    printf(" /$$$$$$$$                  /$$              /$$$$$$            /$$                       /$$           /$$                    \n"
+    "|__  $$__/                 | $$             /$$__  $$          | $$                      | $$          | $$                    \n"
+    "   | $$  /$$$$$$   /$$$$$$$| $$   /$$      | $$  \\__/  /$$$$$$$| $$$$$$$   /$$$$$$   /$$$$$$$ /$$   /$$| $$  /$$$$$$   /$$$$$$ \n"
+    "   | $$ |____  $$ /$$_____/| $$  /$$/      |  $$$$$$  /$$_____/| $$__  $$ /$$__  $$ /$$__  $$| $$  | $$| $$ /$$__  $$ /$$__  $$\n"
+    "   | $$  /$$$$$$$|  $$$$$$ | $$$$$$/        \\____  $$| $$      | $$  \\ $$| $$$$$$$$| $$  | $$| $$  | $$| $$| $$$$$$$$| $$  \\__/\n"
+    "   | $$ /$$__  $$ \\____  $$| $$_  $$        /$$  \\ $$| $$      | $$  | $$| $$_____/| $$  | $$| $$  | $$| $$| $$_____/| $$      \n"
+    "   | $$|  $$$$$$$ /$$$$$$$/| $$ \\  $$      |  $$$$$$/|  $$$$$$$| $$  | $$|  $$$$$$$|  $$$$$$$|  $$$$$$/| $$|  $$$$$$$| $$      \n"
+    "   |__/ \\_______/|_______/ |__/  \\__/       \\______/  \\_______/|__/  |__/ \\_______/ \\_______/ \\______/ |__/ \\_______/|__/      \n");
     while (1) {
-        printf("========== TASK SCHEDULER ==========\n");
+        printf("\n========== TASK SCHEDULER ==========\n");
         printf("1. Add Tasks\n");
         printf("2. Add Dependencies\n");
         printf("3. Critical Path Detection\n");
         printf("4. Shortest Path Between Two Tasks\n");
         printf("5. Display Graph\n");
         printf("6. Suggest Next Tasks\n"); 
-        printf("7. Exit\n");
+        printf("7. Reschedule Tasks\n");
+        printf("8. Export\n");
+        printf("9. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
         getchar();
@@ -450,8 +460,14 @@ int main() {
                 taskName[strcspn(taskName, "\n")] = '\0';
                 suggestNextTasks(graph, taskName);
                 break;
+            case 7: 
+                
+                RescheduleTasks(graph,deadlines); 
+            case 8: 
+                
+                exportPlan(graph,deadlines); 
 
-            case 7:
+            case 9:
                 printf("Exiting...\n");
                 exit(0);
 
